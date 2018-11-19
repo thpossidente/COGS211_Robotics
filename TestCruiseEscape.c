@@ -5,10 +5,12 @@ const int LEFT_MOTOR = 0;
 const int RIGHT_MOTOR = 3;
 const float TOP_SPEED = 1023.0;//100;
 const int BLUE_CH = 0;
-int num_blue;
-
 const int TRUE = 1;
 const int FALSE = 0;
+
+int num_blue;
+
+
 
 
 void main() 
@@ -87,20 +89,17 @@ void stop(){
 
 /******************************************************/
 int check_approach_conditions(){
-	printf("approach_conditions");
 	int a;
 	int area_blue = 0;
 	camera_update();
 	int min_blue_area = 500;
 	int num_blue = get_object_count(BLUE_CH); 
-	printf("num blue: %f", num_blue);
 	
 	if(num_blue > 0){
 		for(a = 0; a < num_blue; a++) {
 			int obj_area = get_object_area(BLUE_CH, a);
-			if (obj_area > area_blue) {
+			if ((obj_area > min_blue_area) && (obj_area > area_blue)) {
 				area_blue = obj_area;
-				printf("area: %f",(float)area_blue);
 		}
 		}
 	}
@@ -112,23 +111,27 @@ int check_approach_conditions(){
 /******************************************************/
 void approach(){
 	//get the x-coordinates of the other robot and move based on them
-	/*
+	// need to determine which index is the object we are getting the 
+	// x coordinate for. This will likely require a for loop similar to the
+	// one in check_approach_conditions. 
+	
 	camera_open(HIGH_RES);
 	camera_update();
 	num_blue = get_object_count(BLUE_CH);
-x_con = track_x(BLUE_CH, 0);
-if(x_con == 0) {
-	drive(0.5, 0.5, 0.5)
-}
-else if (x_con < 0) {
-drive(0.25, 0.75, 0.5);
-}
-else {
-drive(0.75, 0.25, 0.5);
-}
-
-	*/
-	printf("approach called");
-	stop();
+	float x_con = get_object_center(BLUE_CH, 0).x;
+	printf("x coordinate: %f", x_con);
+	if(x_con == 0) {
+		drive(0.5, 0.5, 0.5);
+		printf("straight");
+	}
+	else if (x_con < 0) {
+		drive(0.25, 0.75, 0.5);
+		printf("Left");
+	}
+	else {
+		drive(0.75, 0.25, 0.5);
+		printf("Right");
+	}
+	
 }
 /******************************************************/
