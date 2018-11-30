@@ -1,5 +1,4 @@
 const int FRONT_BUMP = 0;
-const int LEFT_IR = 4;
 const int RIGHT_IR = 5;
 const int LEFT_MOTOR = 0;
 const int RIGHT_MOTOR = 3;
@@ -11,8 +10,6 @@ const int FALSE = 0;
 int num_blue;
 
 
-
-
 void main() 
 {
 	enable_servos();
@@ -22,6 +19,8 @@ void main()
 	while(1){
 		if(check_escape_conditions()){
 			escape();
+		}else if (check_dancing_condition()){
+			dance();
 		}else if(check_approach_conditions()){
 			approach();
 		}else{straight_cruise();
@@ -33,7 +32,10 @@ void main()
 void drive(float left, float right, float delay_seconds){
     float left_speed;
     float right_speed;
-    
+  
+	printf("L: %f \n", left);
+	printf("R: %f \n", right);
+
     delay_seconds *= 1000;
     //printf("left = %f, right = %f, TOP_SPEED = %f\n", left, right, TOP_SPEED);
     
@@ -80,12 +82,6 @@ void straight_cruise(){
 	drive(0.40, 0.40, 0.5);
 }
 
-/********************************************/
-
-void stop(){
-	drive(0.0, 0.0, 1);
-}
-
 
 /******************************************************/
 int check_approach_conditions(){
@@ -114,24 +110,60 @@ void approach(){
 	// need to determine which index is the object we are getting the 
 	// x coordinate for. This will likely require a for loop similar to the
 	// one in check_approach_conditions. 
-	
-	camera_open(HIGH_RES);
+
 	camera_update();
 	num_blue = get_object_count(BLUE_CH);
-	float x_con = get_object_center(BLUE_CH, 0).x;
-	printf("x coordinate: %f", x_con);
-	if(x_con == 0) {
+	int x_con = get_object_center(BLUE_CH, 0).x;
+	printf("x coordinate: %d\n", x_con);
+	if(x_con == 90) {
 		drive(0.5, 0.5, 0.5);
-		printf("straight");
 	}
-	else if (x_con < 0) {
-		drive(0.25, 0.75, 0.5);
-		printf("Left");
+	else if (x_con < 90) {
+		float leftDegree = 0.75;
+		if (x_con < 80) {
+			leftDegree = 1;
+		}
+		drive(0.15, leftDegree, 1);
+		printf("Left \n");
 	}
 	else {
-		drive(0.75, 0.25, 0.5);
-		printf("Right");
+		float rightDegree = 0.75;
+		if (x_con > 100) {
+			rightDegree = 1;
+		}
+		drive(rightDegree, 0.15, 1);
+		printf("Right \n");
 	}
 	
 }
 /******************************************************/
+
+int check_dancing_condition(){
+	int other_robot_present = check_approach_conditions();
+	int close_enough;
+	
+    int right_ir_value = analog_et(RIGHT_IR);
+	if (right_ir_value > 410) {
+		close_enough = TRUE;
+    }
+	printf("IR value: %d", right_ir_value);
+	//if the other robot is present and the distance is close enough, dance!
+	if (other_robot_present && close_enough){
+		return TRUE;
+	}else{ 
+		return FALSE;}
+}
+
+/******************************************************/
+
+void dance(){
+//A possible dance, just a series of simple movements for now
+	printf("DANCE TRIGGERED \n");
+	drive(-0.2, -0.2, 0.1);
+	drive(0, 0.2, 0.05);
+	drive(0, -0.2, 0.05);
+	drive(0.2, 0, 0.05);
+	drive(-0.2, 0, 0.05);
+	drive(0.1, 0.1, 0.05);
+	drive(-0.1, -0.1, 0.05);
+}
